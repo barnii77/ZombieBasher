@@ -1,11 +1,15 @@
 'use strict';
 
-// The canvas
+// The visible canvas (upscales the render buffer)
+let visibleCanvas;
+// The visible canvas drawing context
+let visibleCtx;
+// The hidden canvas containing raw render buffer
 let canvas;
 // The drawing context
 let ctx;
 
-function resizeCanvasToAspect() {
+function resizeCanvasToAspect(canvas) {
     const vh = window.innerHeight;
 
     // 20% of viewport height for control panel, 5% for spacer
@@ -23,9 +27,13 @@ function resizeCanvasToAspect() {
 }
 
 function initCanvas() {
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
-    resizeCanvasToAspect();
+    visibleCanvas = document.getElementById("canvas");
+    visibleCtx = visibleCanvas.getContext("2d");
+    let canvasAndContext = newInvisibleCanvas(RENDER_BUF_W, RENDER_BUF_H);
+    canvas = canvasAndContext.canvas;
+    ctx = canvasAndContext.ctx;
+    resizeCanvasToAspect(visibleCanvas);
+    setupPointerLock(visibleCanvas, gameOnMouseMove);
 }
 
 function addUiHandlers() {
@@ -48,8 +56,8 @@ function addUiHandlers() {
     });
 
     window.addEventListener('resize', () => {
-        resizeCanvasToAspect();
-        initRenderBuffer(canvas, ctx)
+        resizeCanvasToAspect(visibleCanvas);
+        // initRenderBuffer(canvas, ctx)
     });
 }
 
@@ -66,7 +74,7 @@ function gameLoop() {
 
     let t = window.performance.now();
     render();
-    draw(ctx);
+    draw(canvas, ctx, visibleCanvas, visibleCtx);
     let dt = (t - prevTime) / 1000;
     step(dt);
 
