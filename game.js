@@ -11,7 +11,5 @@ function step() {
 }
 
 function isGameOver() {
-    // TODO
-    return stepCounter === 100;
-
+    return false;
 }

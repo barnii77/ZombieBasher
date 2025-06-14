@@ -30,42 +30,67 @@ function initCanvas() {
 
 function addUiHandlers() {
     let restart = document.getElementById("restart");
-    restart.addEventListener("click", function () {
-        initGame(canvas);
+    restart.addEventListener("click", () => {
+        initGame(canvas, ctx);
     })
+
+    let worldUpload = document.getElementById("uploadWorld");
+    worldUpload.addEventListener("change", e => {
+        let file = e.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = e => {
+            let content = e.target.result;
+            loadWorld(content);
+        };
+        reader.readAsText(file);
+        // loadWorld();  // load an empty world temporarily
+    });
+
     window.addEventListener('resize', () => {
         resizeCanvasToAspect();
-        initRenderBuffer(canvas)
+        initRenderBuffer(canvas, ctx)
     });
 }
 
+let gameLoopState = {
+    prevTime: window.performance.now(),
+    dtAccum: 0,
+    iterCounter: 0,
+};
+
 function gameLoop() {
-	let prevTime = window.performance.now();
-	let dtAccum = 0;
-	let iterCounter = 0;
-    while (!isGameOver()) {
-		let t = window.performance.now();
-        render();
-        draw(ctx);
-		let dt = t - prevTime;
-        step(dt);
-		
-		dtAccum += dt;
-		iterCounter++;
-		if (dtAccum > 1) {
-			console.log(`${iterCounter/dtAccum} FPS`);
-			dtAccum = 0, iterCounter = 0;
-		}
-		
-		prevTime = t;
+    let prevTime = gameLoopState.prevTime;
+    let dtAccum = gameLoopState.dtAccum;
+    let iterCounter = gameLoopState.iterCounter;
+
+    let t = window.performance.now();
+    render();
+    draw(ctx);
+    let dt = (t - prevTime) / 1000;
+    step(dt);
+
+    dtAccum += dt;
+    iterCounter++;
+    if (dtAccum > 1) {
+        console.log(`${iterCounter/dtAccum} FPS`);
+        dtAccum = 0, iterCounter = 0;
     }
+
+    prevTime = t;
+
+    gameLoopState.prevTime = prevTime;
+    gameLoopState.dtAccum = dtAccum;
+    gameLoopState.iterCounter = iterCounter;
+
+    if (!isGameOver()) requestAnimationFrame(gameLoop);
 }
 
 function main() {
     initCanvas();
     addUiHandlers();
     initGame(canvas, ctx);
-    gameLoop();
+    requestAnimationFrame(gameLoop);
 }
 
 main()
