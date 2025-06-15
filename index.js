@@ -36,6 +36,12 @@ function initCanvas() {
     setupPointerLock(visibleCanvas, gameOnMouseMove);
 }
 
+async function readerDoneLoadingCallback(e) {
+    let content = e.target.result;
+    await loadWorld(content);
+    applyPhysicsConstraints();
+}
+
 function addUiHandlers() {
     let restart = document.getElementById("restart");
     restart.addEventListener("click", () => {
@@ -47,13 +53,8 @@ function addUiHandlers() {
         let file = e.target.files[0];
         if (!file) return;
         let reader = new FileReader();
-        reader.onload = e => {
-            let content = e.target.result;
-            loadWorld(content);
-            applyPhysicsConstraints();
-        };
+        reader.onload = readerDoneLoadingCallback;
         reader.readAsText(file);
-        // loadWorld();  // load an empty world temporarily
     });
 
     window.addEventListener('resize', () => {

@@ -5,6 +5,7 @@ let worldTextureData = [];
 let worldTextureIndices = [];
 let worldTextureSizes = [];
 let worldInvertUVForTriangle = [];
+let worldEntities = [];
 
 function getParenContent(line) {
     return line.slice(line.indexOf('(') + 1, line.lastIndexOf(')'));
@@ -59,9 +60,77 @@ async function loadTextureAsUint8Array(texPath, width, height) {
     return uint8Array;
 }
 
+function addPoint(line, points) {
+    let point = parsePoint(line);
+    points.push(point);
+    // Always keep the last 3 points
+    if (points.length > 3) {
+        points.shift();
+    }
+}
+
+async function addTriangle(line, points, numUniqueTextures, worldTexPathsToIdx) {
+    let args = getParenContent(line).split(',');
+    let texPath = args[0];
+    if (worldTexPathsToIdx[texPath] === undefined) {
+        worldTexPathsToIdx[texPath] = numUniqueTextures[0]++;
+        const size = 128; // decide dynamically based on image size
+        worldTextureData.push(await loadTextureAsUint8Array(texPath, size, size));
+        worldTextureSizes.push(size); // width
+        worldTextureSizes.push(size); // height
+    }
+    worldTextureIndices.push(worldTexPathsToIdx[texPath]);
+    if (points.length !== 3) {
+        throw Error("invalid world");
+    }
+    for (let point of points) {
+        // A triangle's data is simply 9 floats
+        worldVertices.push(point.x);
+        worldVertices.push(point.y);
+        worldVertices.push(point.z);
+    }
+    if (args[1] !== undefined) {
+        worldInvertUVForTriangle.push(args[1].trim().toLowerCase() === "invert");
+    } else {
+        worldInvertUVForTriangle.push(false);
+    }
+}
+
+async function addZombie(line, points, numUniqueTextures, worldTexPathsToIdx) {
+    let args = getParenContent(line).split(",");
+    let respawn = false;
+    if (args[1] !== undefined && args[1].trim().toLowerCase() === "respawn") {
+        respawn = true;
+    }
+    if (points.length === 0) {
+        throw Error("invalid world");
+    }
+    let point = points[points.length - 1];
+    let vertexOffset = worldVertices.length;
+
+    // Construct entity geometry
+    addPoint("P(0, 0, 0)", points);
+    addPoint("P(0, 0, 0)", points);
+    addPoint("P(0, 0, 0)", points);
+    addTriangle("T(resources/zombie.jpg)", points, numUniqueTextures, worldTexPathsToIdx);
+    addTriangle("T(resources/zombie.jpg, invert)", points, numUniqueTextures, worldTexPathsToIdx);
+
+    worldEntities.push(new Zombie(vertexOffset, point, respawn));
+}
+
+function addEntity(line, points, numUniqueTextures, worldTexPathsToIdx) {
+    let args = getParenContent(line).split(",");
+    let etype = args[0];
+    if (etype === "zombie") {
+        addZombie(line, points, numUniqueTextures, worldTexPathsToIdx);
+    } else {
+        throw Error("Unknown etype " + etype);
+    }
+}
+
 async function loadWorld(content) {
     let points = [];
-    let numUniqueTextures = 0;
+    let numUniqueTextures = [0];
     let worldTexPathsToIdx = {};
     worldTextureData = [];
     worldTextureIndices = [];
@@ -73,37 +142,11 @@ async function loadWorld(content) {
     for (let line of lines) {
         if (line.length === 0 || line.startsWith('#')) continue;
         if (line[0] == 'P') {
-            // Point
-            let point = parsePoint(line);
-            points.push(point);
-            // Always keep the last 3 points
-            if (points.length > 3) {
-                points.shift();
-            }
+            addPoint(line, points);
         } else if (line[0] == 'T') {
-            // Triangle
-            let args = getParenContent(line).split(',');
-            let texPath = args[0];
-            if (worldTexPathsToIdx[texPath] === undefined) {
-                worldTexPathsToIdx[texPath] = numUniqueTextures++;
-                const size = 128; // decide dynamically based on image size
-                worldTextureData.push(await loadTextureAsUint8Array(texPath, size, size));
-                worldTextureSizes.push(size); // width
-                worldTextureSizes.push(size); // height
-            }
-            worldTextureIndices.push(worldTexPathsToIdx[texPath]);
-            for (let point of points) {
-                // A triangle's data is simply 9 floats
-                worldVertices.push(point.x);
-                worldVertices.push(point.y);
-                worldVertices.push(point.z);
-            }
-            if (args[1] !== undefined) {
-                worldInvertUVForTriangle.push(args[1].trim().toLowerCase() === "invert");
-            }
+            await addTriangle(line, points, numUniqueTextures, worldTexPathsToIdx);
         } else if (line[0] == 'E') {
-            // Entity
-
+            await addEntity(line, points, numUniqueTextures, worldTexPathsToIdx);
         }
     }
 }

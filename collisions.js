@@ -1,31 +1,6 @@
 // NOTE: this file was made with the help of ChatGPT because it is extremely math heavy
 
 /**
- * Vec3 utility for 3D vector operations.
- */
-const Vec3 = {
-  add: (a, b) => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z }),
-  sub: (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z }),
-  scale: (a, s) => ({ x: a.x * s, y: a.y * s, z: a.z * s }),
-  dot: (a, b) => a.x*b.x + a.y*b.y + a.z*b.z,
-  cross: (a, b) => ({
-    x: a.y*b.z - a.z*b.y,
-    y: a.z*b.x - a.x*b.z,
-    z: a.x*b.y - a.y*b.x
-  }),
-  length: (a) => Math.hypot(a.x, a.y, a.z),
-  normalize: (a) => {
-    const len = Math.hypot(a.x, a.y, a.z);
-    if (len > 1e-12) {
-      return { x: a.x/len, y: a.y/len, z: a.z/len };
-    } else {
-      return { x: 0, y: 0, z: 0 };
-    }
-  },
-  abs: (a) => ({ x: Math.abs(a.x), y: Math.abs(a.y), z: Math.abs(a.z) })
-};
-
-/**
  * Clip a convex polygon (in 3D) against a half-space plane: keep points P such that n·P >= d.
  * Uses Sutherland–Hodgman style clipping in 3D.
  *
@@ -291,7 +266,7 @@ function triangleBoxOverlapArea(boxCenter, extents, v0, v1, v2) {
  *        v2 = ( trianglesFlat[9*i+6], trianglesFlat[9*i+7],   trianglesFlat[9*i+8] )
  * @returns { null | { triangleIndex: number, overlapArea: number, mtv: {x,y,z} } }
  */
-function findMaxOverlapCollision(center, sizeX, sizeY, sizeZ, trianglesFlat) {
+function findMaxOverlapCollision(center, sizeX, sizeY, sizeZ, trianglesFlat, ignoreTriangles) {
   // Validate input length
   if (!Array.isArray(trianglesFlat) || (trianglesFlat.length % 9) !== 0) {
     throw new Error("trianglesFlat must be an array with length multiple of 9");
@@ -305,6 +280,9 @@ function findMaxOverlapCollision(center, sizeX, sizeY, sizeZ, trianglesFlat) {
   let bestArea = 0;
 
   for (let i = 0; i < triCount; i++) {
+    if (ignoreTriangles.includes(i)) {
+      continue;
+    }
     const base = 9 * i;
     const v0 = {
       x: trianglesFlat[base],

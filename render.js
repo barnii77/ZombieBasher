@@ -1,8 +1,5 @@
 'use strict';
 
-// TODO when I look up and then have a wall in my peripheral vision it is stretched so it looks like it is angled when it is straight.
-//  Is this an artifact of me sampling ray directions incorrectly? Figure out what's going wrong.
-
 // Array for writing rendering results that are then rendered to the canvas (but only after further processing).
 // Initialized by the game loop.
 let rawRenderBuffer, renderBufferImg, renderBufferW, renderBufferH;
@@ -118,9 +115,15 @@ function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
         let texOffset = 4 * (texW * texYIdx + texXIdx);
 
         let brightness = 1.0; // getBrightness(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z);
+        // TODO this is a patch for an underlying bug, not a fix
+        if (tex === undefined) {
+            return;
+        }
         r = tex[texOffset] * brightness;
         g = tex[texOffset + 1] * brightness;
         b = tex[texOffset + 2] * brightness;
+        // TODO support alpha by setting new starting point for raycast behind previous hit point if alpha is transparent and interpolating the results)
+        //  and doing that until you hit either nothing (sky) or something with alpha 255
         // a = tex[texOffset + 3];
     }
 

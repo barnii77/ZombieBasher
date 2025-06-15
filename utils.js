@@ -101,3 +101,28 @@ function magnitude(x, y, z) {
 	return Math.sqrt(x * x + y * y + z * z);
 }
 
+/**
+ * Vec3 utility for 3D vector operations.
+ */
+const Vec3 = {
+  add: (a, b) => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z }),
+  sub: (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z }),
+  scale: (a, s) => ({ x: a.x * s, y: a.y * s, z: a.z * s }),
+  dot: (a, b) => a.x*b.x + a.y*b.y + a.z*b.z,
+  cross: (a, b) => ({
+    x: a.y*b.z - a.z*b.y,
+    y: a.z*b.x - a.x*b.z,
+    z: a.x*b.y - a.y*b.x
+  }),
+  length: (a) => Math.hypot(a.x, a.y, a.z),
+  normalize: (a) => {
+    const len = Math.hypot(a.x, a.y, a.z);
+    if (len > 1e-12) {
+      return { x: a.x/len, y: a.y/len, z: a.z/len };
+    } else {
+      return { x: 0, y: 0, z: 0 };
+    }
+  },
+  abs: (a) => ({ x: Math.abs(a.x), y: Math.abs(a.y), z: Math.abs(a.z) })
+};
+

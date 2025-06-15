@@ -15,22 +15,23 @@ function clampPlayerAngles() {
     if (playerAngleVertical < -maxVerticalAngle) playerAngleVertical = -maxVerticalAngle;
 }
 
-function applyPhysicsConstraints() {
+function applyPhysicsConstraints(x, y, z, ignoreTriangles) {
     // Apply physics constraints (i.e. triangle collisions). Limit the number of iterations so
     // the event loop doesn't hang if we do get terminally stuck in a wall.
+    if (ignoreTriangles === undefined) ignoreTriangles = [];
     let i;
     for (i = 0; i < 10; i++) {
-        let center = { x: playerX, y: playerY - PLAYER_HITBOX_SIZE_Y / 2.0, z: playerZ };
-        let collision = findMaxOverlapCollision(center, PLAYER_HITBOX_SIZE_X, PLAYER_HITBOX_SIZE_Y, PLAYER_HITBOX_SIZE_Z, worldVertices);
+        let center = { x: x, y: y - ENTITY_HITBOX_SIZE_Y / 2.0, z: z };
+        let collision = findMaxOverlapCollision(center, ENTITY_HITBOX_SIZE_X, ENTITY_HITBOX_SIZE_Y, ENTITY_HITBOX_SIZE_Z, worldVertices, ignoreTriangles);
         if (collision === null) {
             break;
         }
         // Force player outside of triangle
-        playerX += collision.mtv.x;
-        playerY += collision.mtv.y;
-        playerZ += collision.mtv.z;
+        x += collision.mtv.x;
+        y += collision.mtv.y;
+        z += collision.mtv.z;
     }
-    return i;
+    return {numCollisions: i, x: x, y: y, z: z};
 }
 
 function step(dt) {
@@ -82,6 +83,8 @@ function step(dt) {
 
     clampPlayerAngles();
 
+    playerY += playerVelY * dt;
+
     // Apply gravity if map is loaded (note that it is just constant speed downward gravity)
     if (worldVertices.length > 0) {
         playerVelY += GRAVITY * dt; // TODO this kind of logic should be put in a separate loop with fixed ticks/s
@@ -89,9 +92,13 @@ function step(dt) {
     if (playerVelY < PLAYER_FALL_SPEED_LIMIT) {
         playerVelY = PLAYER_FALL_SPEED_LIMIT;
     }
-    playerY += playerVelY * dt;
 
-    let numCollisions = applyPhysicsConstraints();
+    let adjust = applyPhysicsConstraints(playerX, playerY, playerZ);
+    let numCollisions = adjust.numCollisions;
+
+    playerX = adjust.x;
+    playerY = adjust.y;
+    playerZ = adjust.z;
 
     if (numCollisions > 0) {
         // No gravity if standing on something
@@ -100,6 +107,10 @@ function step(dt) {
             // Can jump if standing on something
             playerVelY = PLAYER_JUMP_VEL;
         }
+    }
+
+    for (let entity of worldEntities) {
+        entity.step(dt);
     }
 
     stepCounter++;
