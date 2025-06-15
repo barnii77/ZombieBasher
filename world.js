@@ -108,12 +108,14 @@ async function addZombie(line, points, numUniqueTextures, worldTexPathsToIdx) {
     let point = points[points.length - 1];
     let vertexOffset = worldVertices.length;
 
+    let texPath = args[2] === undefined ? "resources/zombie.jpg" : args[2].trim();
+
     // Construct entity geometry
     addPoint("P(0, 0, 0)", points);
     addPoint("P(0, 0, 0)", points);
     addPoint("P(0, 0, 0)", points);
-    addTriangle("T(resources/zombie.jpg)", points, numUniqueTextures, worldTexPathsToIdx);
-    addTriangle("T(resources/zombie.jpg, invert)", points, numUniqueTextures, worldTexPathsToIdx);
+    addTriangle("T(" + texPath + ")", points, numUniqueTextures, worldTexPathsToIdx);
+    addTriangle("T(" + texPath + ", invert)", points, numUniqueTextures, worldTexPathsToIdx);
 
     worldEntities.push(new Zombie(vertexOffset, point, respawn));
 }

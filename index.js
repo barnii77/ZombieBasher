@@ -78,6 +78,7 @@ function gameLoop() {
 
     render();
     draw(canvas, ctx, visibleCanvas, visibleCtx);
+    drawCrosshair(visibleCanvas, visibleCtx);
 
     let dt = (t - prevTime) / 1000;
 

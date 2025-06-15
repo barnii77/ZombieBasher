@@ -1,3 +1,5 @@
+let primaryMouseButtonDown = false;
+
 function setupPointerLock(canvas, onMouseMoveCallback) {
     function mouseMoveHandler(event) {
         onMouseMoveCallback(event.movementX, -event.movementY);
@@ -26,3 +28,12 @@ function setupPointerLock(canvas, onMouseMoveCallback) {
         console.error('Error while attempting to lock cursor');
     });
 }
+
+function primaryMouseButtonEventHandler(e) {
+    let flags = e.buttons !== undefined ? e.buttons : e.which;
+    primaryMouseButtonDown = (flags & 1) === 1;
+}
+
+document.addEventListener('mousedown', primaryMouseButtonEventHandler);
+document.addEventListener('mouseup', primaryMouseButtonEventHandler);
+

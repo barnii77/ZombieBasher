@@ -34,6 +34,39 @@ function applyPhysicsConstraints(x, y, z, ignoreTriangles) {
     return {numCollisions: i, x: x, y: y, z: z};
 }
 
+
+function hitboxesOverlap(centerA, centerB) {
+  const halfSizeX = ENTITY_HITBOX_SIZE_X / 2 + HITBOX_OVERLAP_MARGIN;
+  const halfSizeY = ENTITY_HITBOX_SIZE_Y / 2 + HITBOX_OVERLAP_MARGIN;
+  const halfSizeZ = ENTITY_HITBOX_SIZE_Z / 2 + HITBOX_OVERLAP_MARGIN;
+
+  const overlapX = Math.abs(centerA.x - centerB.x) < ENTITY_HITBOX_SIZE_X;
+  const overlapY = Math.abs(centerA.y - centerB.y) < ENTITY_HITBOX_SIZE_Y;
+  const overlapZ = Math.abs(centerA.z - centerB.z) < ENTITY_HITBOX_SIZE_Z;
+
+  return overlapX && overlapY && overlapZ;
+}
+
+function headToCenter(x, y, z) {
+    return {x: x - ENTITY_HITBOX_SIZE_X / 2.0, y: y - ENTITY_HITBOX_SIZE_Y / 2.0, z: z - ENTITY_HITBOX_SIZE_Z / 2.0}
+}
+
+function playerDie() {
+    playerDead = true;
+    // Redirect to GTA wasted meme on yt
+    window.location.href = "https://yewtu.be/watch?v=yJsozdAduwc&autoplay=1";
+}
+
+function playerShoot() {
+    let playerViewDir = mat3MultiplyVec3(buildRotationMatrix3x3(playerAngleHorizontal, playerAngleVertical), 0, 0, 1);
+    let rcRes = castRay(playerX, playerY, playerZ, playerViewDir.x, playerViewDir.y, playerViewDir.z);
+    for (let entity of worldEntities) {
+        if (entity.getBodyTriangles().includes(rcRes.triangleIdx)) {
+            entity.die();
+        }
+    }
+}
+
 function step(dt) {
     let rotationMat = buildRotationMatrix3x3(playerAngleHorizontal, playerAngleVertical);
     let playerDir = mat3MultiplyVec3(rotationMat, 0, 0, 1);
@@ -93,6 +126,21 @@ function step(dt) {
         playerVelY = PLAYER_FALL_SPEED_LIMIT;
     }
 
+    if (primaryMouseButtonDown) {
+        playerShoot();
+        primaryMouseButtonDown = false;
+    }
+    if (playerY < DEATH_BARRIER_Y) {
+        playerDie();
+    }
+
+    for (let entity of worldEntities) {
+        entity.step(dt);
+        if (hitboxesOverlap(headToCenter(playerX, playerY, playerZ), headToCenter(entity.x, entity.y, entity.z))) {
+            playerDie();
+        }
+    }
+
     let adjust = applyPhysicsConstraints(playerX, playerY, playerZ);
     let numCollisions = adjust.numCollisions;
 
@@ -109,10 +157,6 @@ function step(dt) {
         }
     }
 
-    for (let entity of worldEntities) {
-        entity.step(dt);
-    }
-
     stepCounter++;
 }
 
@@ -123,5 +167,5 @@ function gameOnMouseMove(dx, dy) {
 }
 
 function isGameOver() {
-    return false;
+    return playerDead;
 }

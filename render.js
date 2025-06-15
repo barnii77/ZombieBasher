@@ -72,63 +72,74 @@ function getBrightness(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z) {
 }
 
 function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
-	// Cast ray
-    let rcRes = castRay(playerX, playerY, playerZ, rayStepX, rayStepY, rayStepZ);
-    let t = rcRes.t;
-    let triangleIdx = rcRes.triangleIdx;
+    let r = 0, g = 0, b = 0, a = 0;
+    let ox = playerX, oy = playerY, oz = playerZ;
+    let colorScale = 1.0;
 
-    // Determine color
-    let r, g, b; // , a;
-    if (triangleIdx === -1) {
-        // Draw a sky-blue background color
-        r = 128;
-        g = 128;
-        b = 255;
-    } else {
-        // Convert world coords to tex coords
-        let worldX = rayStepX * t + playerX, worldY = rayStepY * t + playerY, worldZ = rayStepZ * t + playerZ;
+    let nIters = 0;
+    while (a <= 254.0 && nIters < 10) {
+        // Cast ray
+        let rcRes = castRay(ox, oy, oz, rayStepX, rayStepY, rayStepZ);
+        let t = rcRes.t;
+        let triangleIdx = rcRes.triangleIdx;
 
-        // Sample texture
-        let triangleOffset = triangleIdx * 9;
-        let v0x = worldVertices[triangleOffset], v0y = worldVertices[triangleOffset + 1], v0z = worldVertices[triangleOffset + 2];
-        let v1x = worldVertices[triangleOffset + 3], v1y = worldVertices[triangleOffset + 4], v1z = worldVertices[triangleOffset + 5];
-        let v2x = worldVertices[triangleOffset + 6], v2y = worldVertices[triangleOffset + 7], v2z = worldVertices[triangleOffset + 8];
-        let uv = computeTriangleUV(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z, worldX, worldY, worldZ);
+        if (triangleIdx === -1) {
+            // Draw a sky-blue background color
+            r += 128 * colorScale;
+            g += 128 * colorScale;
+            b += 255 * colorScale;
+            a += 255 * colorScale;
+        } else {
+            // Convert world coords to tex coords
+            let worldX = rayStepX * t + playerX, worldY = rayStepY * t + playerY, worldZ = rayStepZ * t + playerZ;
 
-        if (uv === null) return; // degenerate triangle
+            // Sample texture
+            let triangleOffset = triangleIdx * 9;
+            let v0x = worldVertices[triangleOffset], v0y = worldVertices[triangleOffset + 1], v0z = worldVertices[triangleOffset + 2];
+            let v1x = worldVertices[triangleOffset + 3], v1y = worldVertices[triangleOffset + 4], v1z = worldVertices[triangleOffset + 5];
+            let v2x = worldVertices[triangleOffset + 6], v2y = worldVertices[triangleOffset + 7], v2z = worldVertices[triangleOffset + 8];
+            let uv = computeTriangleUV(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z, worldX, worldY, worldZ);
 
-        let texX = uv.u, texY = uv.v;
+            if (uv === null) return; // degenerate triangle
 
-        // UV inversion allows you to define quads intuitively (one triangle has inverted uv)
-        if (worldInvertUVForTriangle[triangleIdx]) {
-            texX = 1.0 - texX;
-            texY = 1.0 - texY;
+            let texX = uv.u, texY = uv.v;
+
+            // UV inversion allows you to define quads intuitively (one triangle has inverted uv)
+            if (worldInvertUVForTriangle[triangleIdx]) {
+                texX = 1.0 - texX;
+                texY = 1.0 - texY;
+            }
+
+            let texIdx = worldTextureIndices[triangleIdx];
+            let tex = worldTextureData[texIdx];
+
+            let texW = worldTextureSizes[2 * texIdx];
+            let texH = worldTextureSizes[2 * texIdx + 1];
+            let texXIdx = Math.round(texW * texX) % texW;
+            let texYIdx = Math.round(texH * texY) % texH;
+            let texOffset = 4 * (texW * texYIdx + texXIdx);
+
+            let brightness = 1.0; // getBrightness(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z);
+            // TODO this is a patch for an underlying bug, not a fix
+            if (tex === undefined) {
+                return;
+            }
+            r = tex[texOffset] * brightness * colorScale;
+            g = tex[texOffset + 1] * brightness * colorScale;
+            b = tex[texOffset + 2] * brightness * colorScale;
+            a = tex[texOffset + 3];
         }
 
-        let texIdx = worldTextureIndices[triangleIdx];
-        let tex = worldTextureData[texIdx];
-
-        let texW = worldTextureSizes[2 * texIdx];
-        let texH = worldTextureSizes[2 * texIdx + 1];
-        let texXIdx = Math.round(texW * texX) % texW;
-        let texYIdx = Math.round(texH * texY) % texH;
-        let texOffset = 4 * (texW * texYIdx + texXIdx);
-
-        let brightness = 1.0; // getBrightness(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z);
-        // TODO this is a patch for an underlying bug, not a fix
-        if (tex === undefined) {
-            return;
-        }
-        r = tex[texOffset] * brightness;
-        g = tex[texOffset + 1] * brightness;
-        b = tex[texOffset + 2] * brightness;
-        // TODO support alpha by setting new starting point for raycast behind previous hit point if alpha is transparent and interpolating the results)
-        //  and doing that until you hit either nothing (sky) or something with alpha 255
-        // a = tex[texOffset + 3];
+        // Advance ray origin so I start slightly behind the previous intersection point
+        ox += rayStepX * (t + 1e-3);
+        oy += rayStepY * (t + 1e-3);
+        oz += rayStepZ * (t + 1e-3);
+        colorScale *= 1.0 - a / 255;
+        nIters++;
     }
 
 	// Write to render buffer
-    writeRenderBuffer(y * renderBufferW + x, r, g, b, 255 /* a */);
+    writeRenderBuffer(y * renderBufferW + x, r, g, b, a);
 }
 
 function render() {
