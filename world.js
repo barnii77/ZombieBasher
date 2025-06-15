@@ -30,6 +30,13 @@ async function loadTextureAsUint8Array(texPath, width, height) {
     img.src = texPath;
     await imageLoaded;
 
+    if (width === -1) {
+        width = img.naturalWidth;
+    }
+    if (height === -1) {
+        height = img.naturalHeight;
+    }
+
     // Create new canvas
     let canvasAndContext = newInvisibleCanvas(width, height);
     let ctx = canvasAndContext.ctx;
@@ -77,7 +84,7 @@ async function loadWorld(content) {
             let texPath = getParenContent(line);
             if (worldTexPathsToIdx[texPath] === undefined) {
                 worldTexPathsToIdx[texPath] = numUniqueTextures++;
-                const size = 64; // TODO maybe support dynamic texture size
+                const size = 128; // decide dynamically based on image size
                 worldTextureData.push(await loadTextureAsUint8Array(texPath, size, size));
                 worldTextureSizes.push(size); // width
                 worldTextureSizes.push(size); // height
