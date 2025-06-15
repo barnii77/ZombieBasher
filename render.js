@@ -101,6 +101,13 @@ function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
         if (uv === null) return; // degenerate triangle
 
         let texX = uv.u, texY = uv.v;
+
+        // UV inversion allows you to define quads intuitively (one triangle has inverted uv)
+        if (worldInvertUVForTriangle[triangleIdx]) {
+            texX = 1.0 - texX;
+            texY = 1.0 - texY;
+        }
+
         let texIdx = worldTextureIndices[triangleIdx];
         let tex = worldTextureData[texIdx];
 
@@ -126,7 +133,7 @@ function render() {
     for (let y = 0; y < renderBufferH; y++) {
         for (let x = 0; x < renderBufferW; x++) {
             // Compute normalized ray direction
-            let xRel = x / renderBufferW * 2 - 1;
+            let xRel = x / renderBufferH * 2 - renderBufferW / renderBufferH;
             let yRel = y / renderBufferH * 2 - 1;
             let rayStepX = xRel;
             let rayStepY = -yRel; // invert y so negative values are down not up
