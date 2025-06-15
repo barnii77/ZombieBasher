@@ -114,17 +114,44 @@ async function addZombie(line, points, numUniqueTextures, worldTexPathsToIdx) {
     addPoint("P(0, 0, 0)", points);
     addPoint("P(0, 0, 0)", points);
     addPoint("P(0, 0, 0)", points);
-    addTriangle("T(" + texPath + ")", points, numUniqueTextures, worldTexPathsToIdx);
-    addTriangle("T(" + texPath + ", invert)", points, numUniqueTextures, worldTexPathsToIdx);
+    await addTriangle("T(" + texPath + ")", points, numUniqueTextures, worldTexPathsToIdx);
+    await addTriangle("T(" + texPath + ", invert)", points, numUniqueTextures, worldTexPathsToIdx);
 
     worldEntities.push(new Zombie(vertexOffset, point, respawn));
 }
 
-function addEntity(line, points, numUniqueTextures, worldTexPathsToIdx) {
+async function addElevator(line, points, numUniqueTextures, worldTexPathsToIdx) {
+    let args = getParenContent(line).split(",");
+    let y = 0.0, height = 5.0, speed = 1.0;
+    if (args[1] !== undefined) {
+        y = parseFloat(args[1].trim());
+    }
+    if (args[2] !== undefined) {
+        height = parseFloat(args[2].trim());
+    }
+    if (args[3] !== undefined) {
+        speed = parseFloat(args[3].trim());
+    }
+    if (points.length < 3) {
+        throw Error("invalid world");
+    }
+    let vertexOffset = worldVertices.length;
+
+    let texPath = args[4] === undefined ? "resources/steel.jpg" : args[4].trim();
+
+    // Construct entity geometry
+    await addTriangle("T(" + texPath + ")", points, numUniqueTextures, worldTexPathsToIdx);
+
+    worldEntities.push(new Elevator(vertexOffset, y, height, speed));
+}
+
+async function addEntity(line, points, numUniqueTextures, worldTexPathsToIdx) {
     let args = getParenContent(line).split(",");
     let etype = args[0];
     if (etype === "zombie") {
-        addZombie(line, points, numUniqueTextures, worldTexPathsToIdx);
+        await addZombie(line, points, numUniqueTextures, worldTexPathsToIdx);
+    } else if (etype == "elevator") {
+        await addElevator(line, points, numUniqueTextures, worldTexPathsToIdx);
     } else {
         throw Error("Unknown etype " + etype);
     }
