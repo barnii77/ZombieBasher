@@ -17,7 +17,7 @@ const LIGHT_DIRECTION_Y = 0.0;
 const LIGHT_DIRECTION_Z = -1.0;
 const AMBIENT_LIGHT = 0.5;
 const DEATH_BARRIER_Y = -50.0;
-const HITBOX_OVERLAP_MARGIN = 0.1;
+const HITBOX_OVERLAP_MARGIN = 0.05;
 
 let stepCounter = 0;
 let playerX = 0.0;

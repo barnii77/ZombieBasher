@@ -1,29 +1,103 @@
-/* styles.css */
-
-/* Ensure html and body fill the viewport with no default margins/padding */
+/* Reset & base */
 html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Spacer between canvas and control panel: exactly 5vh */
+/* Canvas styling */
+.gameCanvas {
+    display: block;
+    margin: 0 auto;
+    background-color: #222;
+    border: 2px solid #333;
+    border-radius: 8px;
+    max-width: 100%;
+}
+
+/* Spacer between canvas and control panel */
 .spacer {
     height: 5vh;
 }
 
-/* Control panel at the bottom: 20vh tall */
+/* Control panel */
 #controlPanel {
     height: 20vh;
-    width: 100%;
-    background-color: #ddd;
+    background-color: #1e1e1e;
+    padding: 1rem 2rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 2px solid #333;
     box-sizing: border-box;
-    padding: 1rem;
 }
 
-/* Canvas: JS will set its width/height, but we center it horizontally */
-#myCanvas {
-    display: block;
-    margin: 0 auto;
-    background-color: #f0f0f0;
+/* Title: Big, bold, red */
+.gameTitle {
+    flex: 0 0 60%;
+    font-size: 3rem;
+    font-weight: 900;
+    color: #ff1e1e;
+    text-shadow: 2px 2px 4px #000;
+    letter-spacing: 0.1em;
+}
+
+/* Menu section */
+.menuControls {
+    flex: 0 0 20%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+/* File input */
+#uploadWorld {
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    width: 100%;
+}
+
+#uploadWorld::file-selector-button {
+    padding: 0.4rem 0.8rem;
+    background-color: #444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#uploadWorld::file-selector-button:hover {
+    background-color: #555;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    #controlPanel {
+        flex-direction: column;
+        height: auto;
+        gap: 1rem;
+    }
+
+    .gameTitle {
+        text-align: center;
+        font-size: 2.5rem;
+        flex: unset;
+    }
+
+    .menuControls {
+        align-items: center;
+        width: 100%;
+        flex: unset;
+    }
 }

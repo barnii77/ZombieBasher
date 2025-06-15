@@ -43,10 +43,10 @@ async function readerDoneLoadingCallback(e) {
 }
 
 function addUiHandlers() {
-    let restart = document.getElementById("restart");
-    restart.addEventListener("click", () => {
-        initGame(canvas, ctx);
-    })
+    // let restart = document.getElementById("restart");
+    // restart.addEventListener("click", () => {
+    //     initGame(canvas, ctx);
+    // })
 
     let worldUpload = document.getElementById("uploadWorld");
     worldUpload.addEventListener("change", e => {

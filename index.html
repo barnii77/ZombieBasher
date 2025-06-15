@@ -21,12 +21,17 @@
     <script src="index.js" defer></script>
 </head>
 <body>
-<canvas id="canvas" tabindex="0"></canvas>
-<div class="spacer"></div>
-<div id="controlPanel">
-    <button id="restart">Restart</button>
-    <label for="uploadWorld">Load world:</label>
-    <input type="file" id="uploadWorld" accept=".json,.txt" />
-</div>
+    <main>
+        <canvas id="canvas" tabindex="0" class="gameCanvas"></canvas>
+        <div class="spacer"></div>
+        <div id="controlPanel">
+            <div class="gameTitle">ZOMBIEBASHER</div>
+            <div class="menuControls">
+                <label for="uploadWorld">🌍 Load world:</label>
+                <input type="file" id="uploadWorld" accept=".json,.txt" />
+            </div>
+        </div>
+    </main>
+    <audio id="gunshotAudio" src="/resources/gunshot.mp3"></audio>
 </body>
 </html>

@@ -1,8 +1,11 @@
 'use strict';
 
+let playerGunshotAudioElem = null;
+
 function initGame(canvas, ctx) {
     stepCounter = 0;
     initRenderBuffer(canvas, ctx);
+    playerGunshotAudioElem = document.getElementById("gunshotAudio");
 }
 
 function clampPlayerAngles() {
@@ -65,6 +68,7 @@ function playerShoot() {
             entity.die();
         }
     }
+    playerGunshotAudioElem.play();
 }
 
 function step(dt) {
