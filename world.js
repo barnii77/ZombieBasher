@@ -4,6 +4,7 @@ let worldVertices = [];
 let worldTextureData = [];
 let worldTextureIndices = [];
 let worldTextureSizes = [];
+let worldInvertUVForTriangle = [];
 
 function getParenContent(line) {
     return line.slice(line.indexOf('(') + 1, line.lastIndexOf(')'));
@@ -81,7 +82,8 @@ async function loadWorld(content) {
             }
         } else if (line[0] == 'T') {
             // Triangle
-            let texPath = getParenContent(line);
+            let args = getParenContent(line).split(',');
+            let texPath = args[0];
             if (worldTexPathsToIdx[texPath] === undefined) {
                 worldTexPathsToIdx[texPath] = numUniqueTextures++;
                 const size = 128; // decide dynamically based on image size
@@ -96,6 +98,12 @@ async function loadWorld(content) {
                 worldVertices.push(point.y);
                 worldVertices.push(point.z);
             }
+            if (args[1] !== undefined) {
+                worldInvertUVForTriangle.push(args[1].trim().toLowerCase() === "invert");
+            }
+        } else if (line[0] == 'E') {
+            // Entity
+
         }
     }
 }
