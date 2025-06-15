@@ -98,10 +98,12 @@ function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
         let v2x = worldVertices[triangleOffset + 6], v2y = worldVertices[triangleOffset + 7], v2z = worldVertices[triangleOffset + 8];
         let uv = computeTriangleUV(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z, worldX, worldY, worldZ);
 
+        if (uv === null) return; // degenerate triangle
+
         let texX = uv.u, texY = uv.v;
         let texIdx = worldTextureIndices[triangleIdx];
         let tex = worldTextureData[texIdx];
-        let texOffset = 4 * Math.round(texY * worldTextureSizes[2 * texIdx] + texX);
+        let texOffset = 4 * Math.round(worldTextureSizes[2 * texIdx] * (Math.round(texY * worldTextureSizes[2 * texIdx + 1]) + texX));
 
         let brightness = 1.0; // getBrightness(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z);
         r = tex[texOffset] * brightness;
