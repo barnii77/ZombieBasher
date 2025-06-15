@@ -52,6 +52,28 @@ function castRay(ox, oy, oz, dx, dy, dz) {
     return { t: tMin, triangleIdx: triangleIdxMin };
 }
 
+function getBrightness(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z) {
+    // Compute edges v0v1 and v0v2
+    const v0v1x = v1x - v0x;
+    const v0v1y = v1y - v0y;
+    const v0v1z = v1z - v0z;
+
+    const v0v2x = v2x - v0x;
+    const v0v2y = v2y - v0y;
+    const v0v2z = v2z - v0z;
+
+    // Compute normal N = v0v1 × v0v2
+    const nx = v0v1y * v0v2z - v0v1z * v0v2y;
+    const ny = v0v1z * v0v2x - v0v1x * v0v2z;
+    const nz = v0v1x * v0v2y - v0v1y * v0v2x;
+
+    // Compute brightness with directional and ambient lighting
+    let dot = nx * LIGHT_DIRECTION_X + ny * LIGHT_DIRECTION_Y + nz * LIGHT_DIRECTION_Z;
+    let brightness = Math.abs(dot) * (1.0 - AMBIENT_LIGHT) + AMBIENT_LIGHT;
+
+    return brightness;
+}
+
 function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
 	// Cast ray
     let rcRes = castRay(playerX, playerY, playerZ, rayStepX, rayStepY, rayStepZ);
@@ -75,13 +97,16 @@ function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
         let v1x = worldVertices[triangleOffset + 3], v1y = worldVertices[triangleOffset + 4], v1z = worldVertices[triangleOffset + 5];
         let v2x = worldVertices[triangleOffset + 6], v2y = worldVertices[triangleOffset + 7], v2z = worldVertices[triangleOffset + 8];
         let uv = computeTriangleUV(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z, worldX, worldY, worldZ);
+
         let texX = uv.u, texY = uv.v;
         let texIdx = worldTextureIndices[triangleIdx];
         let tex = worldTextureData[texIdx];
         let texOffset = 4 * Math.round(texY * worldTextureSizes[2 * texIdx] + texX);
-        r = tex[texOffset];
-        g = tex[texOffset + 1];
-        b = tex[texOffset + 2];
+
+        let brightness = 1.0; // getBrightness(v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z);
+        r = tex[texOffset] * brightness;
+        g = tex[texOffset + 1] * brightness;
+        b = tex[texOffset + 2] * brightness;
         // a = tex[texOffset + 3];
     }
 

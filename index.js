@@ -74,16 +74,23 @@ function gameLoop() {
     let iterCounter = gameLoopState.iterCounter;
 
     let t = window.performance.now();
+
     render();
     draw(canvas, ctx, visibleCanvas, visibleCtx);
-    let dt = (t - prevTime) / 1000;
-    step(dt);
 
-    dtAccum += dt;
-    iterCounter++;
-    if (dtAccum > 1) {
-        console.log(`${iterCounter/dtAccum} FPS`);
-        dtAccum = 0, iterCounter = 0;
+    let dt = (t - prevTime) / 1000;
+
+    // If dt >= 1 second, might have been paused, would make physics super unstable (fall through ground and stuff)
+    //  -> skip iteration
+    if (dt < 1) {
+        step(dt);
+
+        dtAccum += dt;
+        iterCounter++;
+        if (dtAccum > 1) {
+            console.log(`${iterCounter/dtAccum} FPS`);
+            dtAccum = 0, iterCounter = 0;
+        }
     }
 
     prevTime = t;

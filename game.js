@@ -18,7 +18,8 @@ function clampPlayerAngles() {
 function applyPhysicsConstraints() {
     // Apply physics constraints (i.e. triangle collisions). Limit the number of iterations so
     // the event loop doesn't hang if we do get terminally stuck in a wall.
-    for (let i = 0; i < 10; i++) { // TODO set to true
+    let i;
+    for (i = 0; i < 10; i++) {
         let center = { x: playerX, y: playerY - PLAYER_HITBOX_SIZE_Y / 2.0, z: playerZ };
         let collision = findMaxOverlapCollision(center, PLAYER_HITBOX_SIZE_X, PLAYER_HITBOX_SIZE_Y, PLAYER_HITBOX_SIZE_Z, worldVertices);
         if (collision === null) {
@@ -29,6 +30,7 @@ function applyPhysicsConstraints() {
         playerY += collision.mtv.y;
         playerZ += collision.mtv.z;
     }
+    return i;
 }
 
 function step(dt) {
@@ -75,15 +77,30 @@ function step(dt) {
     if (keyboard.isDown('ArrowDown')) {
         playerAngleVertical += arrowRotSpeed;
     }
+
+    let playerWantsToJump = keyboard.isDown('Space');
+
     clampPlayerAngles();
 
     // Apply gravity if map is loaded (note that it is just constant speed downward gravity)
-    // TODO do gravity with acceleration so that I can add jumping
     if (worldVertices.length > 0) {
-        playerY += GRAVITY * dt;
+        playerVelY += GRAVITY * dt; // TODO this kind of logic should be put in a separate loop with fixed ticks/s
     }
+    if (playerVelY < PLAYER_FALL_SPEED_LIMIT) {
+        playerVelY = PLAYER_FALL_SPEED_LIMIT;
+    }
+    playerY += playerVelY * dt;
 
-    applyPhysicsConstraints();
+    let numCollisions = applyPhysicsConstraints();
+
+    if (numCollisions > 0) {
+        // No gravity if standing on something
+        playerVelY = 0.0;
+        if (playerWantsToJump) {
+            // Can jump if standing on something
+            playerVelY = PLAYER_JUMP_VEL;
+        }
+    }
 
     stepCounter++;
 }
