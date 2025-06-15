@@ -1,15 +1,12 @@
 function setupPointerLock(canvas, onMouseMoveCallback) {
     function mouseMoveHandler(event) {
-        // movementX/Y are raw deltas
-        const dx = event.movementX;
-        const dy = event.movementY;
-        onMouseMoveCallback(dx, dy);
+        onMouseMoveCallback(event.movementX, -event.movementY);
     }
 
     // Request pointer lock on click
     canvas.addEventListener('click', () => {
         if (canvas.requestPointerLock) {
-            canvas.requestPointerLock();
+            canvas.requestPointerLock({unadjustedMovement: true});
         }
     });
 

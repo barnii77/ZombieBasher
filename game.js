@@ -106,7 +106,6 @@ function step(dt) {
 }
 
 function gameOnMouseMove(dx, dy) {
-    return; // TODO remove
     playerAngleHorizontal += dx * MOUSE_SENSITIVITY;
     playerAngleVertical -= dy * MOUSE_SENSITIVITY;
     clampPlayerAngles();
