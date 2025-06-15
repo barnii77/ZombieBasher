@@ -1,5 +1,8 @@
 'use strict';
 
+// TODO when I look up and then have a wall in my peripheral vision it is stretched so it looks like it is angled when it is straight.
+//  Is this an artifact of me sampling ray directions incorrectly? Figure out what's going wrong.
+
 // Array for writing rendering results that are then rendered to the canvas (but only after further processing).
 // Initialized by the game loop.
 let rawRenderBuffer, renderBufferImg, renderBufferW, renderBufferH;
@@ -21,10 +24,6 @@ function writeRenderBuffer(i, r, g, b, a) {
 	rawRenderBuffer[offset + 1] = g;
 	rawRenderBuffer[offset + 2] = b;
 	rawRenderBuffer[offset + 3] = a;
-}
-
-function magnitude(x, y, z) {
-	return Math.sqrt(x * x + y * y + z * z);
 }
 
 function castRay(ox, oy, oz, dx, dy, dz) {
@@ -68,7 +67,7 @@ function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
         b = 255;
     } else {
         // Convert world coords to tex coords
-        let worldX = rayStepX * t, worldY = rayStepY * t, worldZ = rayStepZ * t;
+        let worldX = rayStepX * t + playerX, worldY = rayStepY * t + playerY, worldZ = rayStepZ * t + playerZ;
 
         // Sample texture
         let triangleOffset = triangleIdx * 9;
@@ -79,7 +78,7 @@ function renderPixel(x, y, rayStepX, rayStepY, rayStepZ) {
         let texX = uv.u, texY = uv.v;
         let texIdx = worldTextureIndices[triangleIdx];
         let tex = worldTextureData[texIdx];
-        let texOffset = 4 * Math.round(texY * worldTextureSizes[2 * triangleIdx] + texX);
+        let texOffset = 4 * Math.round(texY * worldTextureSizes[2 * texIdx] + texX);
         r = tex[texOffset];
         g = tex[texOffset + 1];
         b = tex[texOffset + 2];

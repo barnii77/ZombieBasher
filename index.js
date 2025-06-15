@@ -50,6 +50,7 @@ function addUiHandlers() {
         reader.onload = e => {
             let content = e.target.result;
             loadWorld(content);
+            applyPhysicsConstraints();
         };
         reader.readAsText(file);
         // loadWorld();  // load an empty world temporarily

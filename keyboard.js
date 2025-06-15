@@ -7,9 +7,9 @@ function setupKeyboardInput() {
 
     window.addEventListener('keydown', (event) => {
         pressed.add(event.code);
-        // if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(event.code)) {
-        //     event.preventDefault();
-        // }
+        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(event.code)) {
+            event.preventDefault();
+        }
     });
 
     window.addEventListener('keyup', (event) => {
