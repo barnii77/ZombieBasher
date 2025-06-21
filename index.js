@@ -108,6 +108,11 @@ function main() {
     initCanvas();
     addUiHandlers();
     initGame(canvas, ctx);
+    // Load default world on startup
+    fetch('resources/release.world')
+        .then(res => res.text())
+        .then(content => loadWorld(content))
+        .catch(err => console.error('Failed to load default world:', err));
     requestAnimationFrame(gameLoop);
 }
 
